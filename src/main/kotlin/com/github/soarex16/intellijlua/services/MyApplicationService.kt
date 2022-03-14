@@ -1,6 +1,6 @@
-package org.jetbrains.plugins.template.services
+package com.github.soarex16.intellijlua.services
 
-import org.jetbrains.plugins.template.MyBundle
+import com.github.soarex16.intellijlua.MyBundle
 
 class MyApplicationService {
 
