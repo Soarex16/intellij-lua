@@ -1,4 +1,4 @@
-package com.github.soarex16.intellijlua
+package com.github.soarex16.lua.lang
 
 import com.intellij.ide.highlighter.XmlFileType
 import com.intellij.psi.xml.XmlFile

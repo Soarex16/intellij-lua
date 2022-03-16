@@ -1,18 +1,22 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <id>com.github.soarex16.intellijlua</id>
-    <name>intellij-lua</name>
+    <name>Lua Lang</name>
     <vendor>soarex16</vendor>
 
-    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <applicationService serviceImplementation="com.github.soarex16.intellijlua.services.MyApplicationService"/>
-        <projectService serviceImplementation="com.github.soarex16.intellijlua.services.MyProjectService"/>
+        <fileType
+                name="Lua"
+                implementationClass="com.github.soarex16.lua.lang.LuaFileType"
+                fieldName="INSTANCE"
+                language="Lua"
+                extensions="lua"
+        />
     </extensions>
 
     <applicationListeners>
-        <listener class="com.github.soarex16.intellijlua.listeners.MyProjectManagerListener"
-                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
+
     </applicationListeners>
 </idea-plugin>

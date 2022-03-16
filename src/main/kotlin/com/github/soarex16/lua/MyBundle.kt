@@ -1,13 +1,13 @@
-package com.github.soarex16.intellijlua
+package com.github.soarex16.lua
 
 import com.intellij.DynamicBundle
 import org.jetbrains.annotations.NonNls
 import org.jetbrains.annotations.PropertyKey
 
 @NonNls
-private const val BUNDLE = "messages.MyBundle"
+private const val BUNDLE = "messages.LuaLangBundle"
 
-object MyBundle : DynamicBundle(BUNDLE) {
+object LuaLangBundle : DynamicBundle(BUNDLE) {
 
     @Suppress("SpreadOperator")
     @JvmStatic
