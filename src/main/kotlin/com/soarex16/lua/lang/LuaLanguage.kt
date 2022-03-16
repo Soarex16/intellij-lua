@@ -1,6 +1,6 @@
-package com.github.soarex16.lua.lang
+package com.soarex16.lua.lang
 
-import com.github.soarex16.lua.LuaIcons
+import com.soarex16.lua.LuaIcons
 import com.intellij.lang.Language
 import com.intellij.openapi.fileTypes.LanguageFileType
 import com.intellij.openapi.vfs.VirtualFile

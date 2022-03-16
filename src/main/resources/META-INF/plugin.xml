@@ -9,7 +9,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <fileType
                 name="Lua"
-                implementationClass="com.github.soarex16.lua.lang.LuaFileType"
+                implementationClass="com.soarex16.lua.lang.LuaFileType"
                 fieldName="INSTANCE"
                 language="Lua"
                 extensions="lua"

@@ -1,4 +1,4 @@
-package com.github.soarex16.lua
+package com.soarex16.lua
 
 import com.intellij.DynamicBundle
 import org.jetbrains.annotations.NonNls

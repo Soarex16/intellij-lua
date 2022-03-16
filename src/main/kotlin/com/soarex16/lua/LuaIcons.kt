@@ -1,4 +1,4 @@
-package com.github.soarex16.lua
+package com.soarex16.lua
 
 import com.intellij.openapi.util.IconLoader
 import javax.swing.Icon
