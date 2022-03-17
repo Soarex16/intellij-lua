@@ -10,6 +10,8 @@ plugins {
     id("org.jetbrains.kotlin.jvm") version "1.6.10"
     // Gradle IntelliJ Plugin
     id("org.jetbrains.intellij") version "1.4.0"
+    // Gradle IntelliJ Grammar-Kit Plugin
+    id("org.jetbrains.grammarkit") version "2021.2.1"
     // Gradle Changelog Plugin
     id("org.jetbrains.changelog") version "1.3.1"
     // Gradle Qodana Plugin
@@ -18,6 +20,10 @@ plugins {
 
 group = properties("pluginGroup")
 version = properties("pluginVersion")
+
+val generatedSourcesPath = file("gen")
+java.sourceSets["main"].java.srcDir(generatedSourcesPath)
+idea.module.generatedSourceDirs.add(generatedSourcesPath)
 
 // Configure project's dependencies
 repositories {
@@ -112,5 +118,15 @@ tasks {
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
         channels.set(listOf(properties("pluginVersion").split('-').getOrElse(1) { "default" }.split('.').first()))
+    }
+
+    generateLexer {
+        source.set("${project.projectDir}/src/main/kotlin/com/soarex16/lua/lang/_LuaLexer.flex")
+        targetDir.set("${generatedSourcesPath}/com/soarex16/lua/lang/lexer")
+        targetClass.set("_LuaLexer")
+    }
+
+    compileKotlin {
+        dependsOn(generateLexer)
     }
 }
