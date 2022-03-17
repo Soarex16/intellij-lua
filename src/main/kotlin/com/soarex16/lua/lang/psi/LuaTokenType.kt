@@ -80,15 +80,23 @@ open class LuaTokenType(@NonNls debugName: String) : IElementType(debugName, Lua
 
         val IDENTIFIER = LuaTokenType("IDENTIFIER")
 
-        val NUMBER = LuaTokenType("NUMBER")
+        val DEC_INT_NUMBER = LuaTokenType("DEC_INT_NUMBER")
+        val HEX_INT_NUMBER = LuaTokenType("HEX_INT_NUMBER")
+        val OCT_INT_NUMBER = LuaTokenType("OCT_INT_NUMBER")
+        val REAL_NUMBER = LuaTokenType("REAL_NUMBER")
 
         val SINGLE_QUOTED_STRING = LuaTokenType("SINGLE_QUOTED_STRING") // 'some string'
         val DOUBLE_QUOTED_STRING = LuaTokenType("DOUBLE_QUOTED_STRING") // "some string"
-        val LITERAL_STRING = LuaTokenType("LITERAL_STRING") // [[ some string ]]
+        val LONG_BRACKETS_STRING = LuaTokenType("LONG_BRACKETS_STRING") // [[ some string ]]
 
         val COMMENTS = TokenSet.create(LINE_COMMENT, BLOCK_COMMENT)
-        val LITERALS = TokenSet.create(TRUE, FALSE, NIL,  NUMBER)
-        val STRINGS = TokenSet.create(SINGLE_QUOTED_STRING, DOUBLE_QUOTED_STRING, LITERAL_STRING)
+        val LITERALS = TokenSet.create(
+            TRUE, FALSE, NIL,
+            SINGLE_QUOTED_STRING, DOUBLE_QUOTED_STRING, LONG_BRACKETS_STRING,
+            DEC_INT_NUMBER, HEX_INT_NUMBER, OCT_INT_NUMBER, REAL_NUMBER
+        )
+        val NUMBERS = TokenSet.create(DEC_INT_NUMBER, HEX_INT_NUMBER, OCT_INT_NUMBER, REAL_NUMBER)
+        val STRINGS = TokenSet.create(SINGLE_QUOTED_STRING, DOUBLE_QUOTED_STRING, LONG_BRACKETS_STRING)
         val KEYWORDS = TokenSet.create(
             NOT, OR, AND, IF, THEN, ELSE, ELSEIF, END, GOTO, WHILE, REPEAT,
             FOR, DO, UNTIL, BREAK, IN, LOCAL, FUNCTION, RETURN

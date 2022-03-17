@@ -14,6 +14,11 @@ import static com.intellij.psi.TokenType.BAD_CHARACTER;
 
 %{
     StringBuilder string = new StringBuilder();
+
+    private IElementType parseLongBracketsString() {
+        // TODO: implement
+        return null;
+    }
 %}
 
 /* Main Character Classes */
@@ -33,6 +38,23 @@ SingleQuotedString = (\'([^\'\r\n\\]|\\.)*\')
 
 LineComment = "--" {InputCharacter}* {LineTerminator}?
 BlockComment = "--[[" ~"]]"
+
+/* Numbers */
+
+/* Integer Numbers */
+
+DecDigit = [0-9]
+OctDigit = [0-7]
+HexDigit = [0-9a-fA-F]
+
+DecIntNumber = {DecDigit}+
+OctIntNumber = {OctDigit}+
+HexIntNumber = "0" [xX] {HexDigit}+
+
+/* Real Numbers */
+
+Exponent = [eE] [+-]? [0-9]+
+RealNumber = ([0-9]+\.[0-9]*|[0-9]*\.[0-9]+) {Exponent}?
 
 %state LITERAL_STRING
 
@@ -122,18 +144,27 @@ BlockComment = "--[[" ~"]]"
 
 {Identifier} { return LuaTokenType.Companion.getIDENTIFIER(); }
 
-/* Number Literals */
-// TODO: numbers
+/* Comments */
+{LineComment} { return LuaTokenType.Companion.getLINE_COMMENT(); }
+{BlockComment} { return LuaTokenType.Companion.getBLOCK_COMMENT(); }
 
 /* String Literals */
 {DoubleQuotedString} { return LuaTokenType.Companion.getDOUBLE_QUOTED_STRING(); }
 {SingleQuotedString} { return LuaTokenType.Companion.getSINGLE_QUOTED_STRING(); }
 
-// TODO: literal strings [[ ]]
+"[[" { return parseLongBracketsString(); }
 
-/* Comments */
-{LineComment} { return LuaTokenType.Companion.getLINE_COMMENT(); }
-{BlockComment} { return LuaTokenType.Companion.getBLOCK_COMMENT(); }
+/* Number Literals */
+
+/* Integer Numbers */
+
+{DecIntNumber} { return LuaTokenType.Companion.getDEC_INT_NUMBER(); }
+{OctIntNumber} { return LuaTokenType.Companion.getDEC_INT_NUMBER(); }
+{HexIntNumber} { return LuaTokenType.Companion.getHEX_INT_NUMBER(); }
+
+/* Real Numbers */
+
+{RealNumber} { return LuaTokenType.Companion.getREAL_NUMBER(); }
 
 /* error fallback */
 [^] { return BAD_CHARACTER; }
