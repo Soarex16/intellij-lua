@@ -90,6 +90,7 @@ open class LuaTokenType(@NonNls debugName: String) : IElementType(debugName, Lua
         val LONG_BRACKETS_STRING = LuaTokenType("LONG_BRACKETS_STRING") // [[ some string ]]
 
         val COMMENTS = TokenSet.create(LINE_COMMENT, BLOCK_COMMENT)
+        val CONSTANTS = TokenSet.create(TRUE, FALSE, NIL)
         val LITERALS = TokenSet.create(
             TRUE, FALSE, NIL,
             SINGLE_QUOTED_STRING, DOUBLE_QUOTED_STRING, LONG_BRACKETS_STRING,
@@ -100,6 +101,13 @@ open class LuaTokenType(@NonNls debugName: String) : IElementType(debugName, Lua
         val KEYWORDS = TokenSet.create(
             NOT, OR, AND, IF, THEN, ELSE, ELSEIF, END, GOTO, WHILE, REPEAT,
             FOR, DO, UNTIL, BREAK, IN, LOCAL, FUNCTION, RETURN
+        )
+
+        val OPERATORS = TokenSet.create(
+            DOTDOT,
+            SHL, SHR, BOR, BAND, BNOT,
+            ADD, SUB, MUL, DIV, IDIV, MOD, POW, HASH,
+            LESS, LESS_EQUAL, GREATER, GREATER_EQUAL, EQUAL, NOT_EQUAL, ASSIGN
         )
     }
 }

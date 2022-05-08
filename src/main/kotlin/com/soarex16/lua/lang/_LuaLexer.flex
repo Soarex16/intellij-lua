@@ -1,5 +1,6 @@
-package com.soarex16.lua.lang;
+package com.soarex16.lua.lang.lexer;
 
+import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.tree.IElementType;
 import com.soarex16.lua.lang.psi.LuaTokenType;
 
@@ -9,14 +10,22 @@ import static com.intellij.psi.TokenType.BAD_CHARACTER;
 %public
 %class _LuaLexer
 %implements FlexLexer
+%function advance
 %type IElementType
 %unicode
 
 %{
-    StringBuilder string = new StringBuilder();
-
     private IElementType parseLongBracketsString() {
-        // TODO: implement
+        while (zzMarkedPos < zzBuffer.length() - 1) {
+            char currSym = zzBuffer.charAt(zzMarkedPos);
+            char nextSym = zzBuffer.charAt(zzMarkedPos + 1);
+            if (currSym == ']' && nextSym == ']') {
+                ++zzMarkedPos;
+                ++zzMarkedPos;
+                return LuaTokenType.Companion.getLONG_BRACKETS_STRING();
+            }
+            ++zzMarkedPos;
+        }
         return null;
     }
 %}
