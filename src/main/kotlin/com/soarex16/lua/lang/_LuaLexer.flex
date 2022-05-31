@@ -5,6 +5,7 @@ import com.intellij.psi.tree.IElementType;
 import com.soarex16.lua.lang.psi.LuaTokenType;
 
 import static com.intellij.psi.TokenType.BAD_CHARACTER;
+import static com.intellij.psi.TokenType.WHITE_SPACE;
 %%
 
 %public
@@ -106,7 +107,7 @@ Exponent   = [eE] [+-]? [0-9]+
 
     /* Separators */
     "("                 { return LuaTokenType.Companion.getL_PAREN(); }
-    "("                 { return LuaTokenType.Companion.getR_PAREN(); }
+    ")"                 { return LuaTokenType.Companion.getR_PAREN(); }
     "{"                 { return LuaTokenType.Companion.getL_BRACE(); }
     "}"                 { return LuaTokenType.Companion.getR_BRACE(); }
     "["                 { return LuaTokenType.Companion.getL_BRACKET(); }
@@ -174,6 +175,8 @@ Exponent   = [eE] [+-]? [0-9]+
 /* Real Numbers */
 
 {RealNumber}            { return LuaTokenType.Companion.getREAL_NUMBER(); }
+
+{Whitespace}            { return WHITE_SPACE; }
 
 /* error fallback */
 [^]                     { return BAD_CHARACTER; }
