@@ -14,6 +14,15 @@
                 language="Lua"
                 extensions="lua"
         />
+        <lang.syntaxHighlighterFactory
+                language="Lua"
+                implementationClass="com.soarex16.lua.LuaSyntaxHighlighterFactory"
+        />
+        <lang.parserDefinition
+                language="Lua"
+                implementationClass="com.soarex16.lua.lang.psi.LuaParserDefinition"
+        />
+        <colorSettingsPage implementation="com.soarex16.lua.LuaColorSettingsPage"/>
     </extensions>
 
     <applicationListeners>
