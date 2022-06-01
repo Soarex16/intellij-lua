@@ -12,13 +12,11 @@ import org.jetbrains.annotations.NonNls
 class LuaElementType(@NonNls debugName: String) : IElementType(debugName, LuaLanguage) {
     companion object {
         val LUA_CHUNK_FILE: IFileElementType = IFileElementType(LuaLanguage)
+        val LUA_CHUNK = LuaElementType("LUA_CHUNK")
 
         //region Statements
         val LUA_BLOCK = LuaElementType("LUA_BLOCK")
         val STATEMENT_LIST = LuaElementType("STATEMENT_LIST")
-
-        // varlist `=` explist
-        val ASSIGNMENT_STATEMENT = LuaElementType("ASSIGNMENT_STATEMENT")
 
         // laststat ::= return [explist] | break
         val RETURN_STATEMENT = LuaElementType("RETURN_STATEMENT")
@@ -26,9 +24,6 @@ class LuaElementType(@NonNls debugName: String) : IElementType(debugName, LuaLan
 
         // do block end
         val DO_STATEMENT = LuaElementType("DO_STATEMENT")
-
-        // functioncall
-        val FUNCTION_CALL_STATEMENT = LuaElementType("FUNCTION_CALL_STATEMENT")
 
         // function_expression (closure)
         val FUNCTION_EXPRESSION = LuaElementType("FUNCTION_EXPRESSION")
@@ -41,7 +36,7 @@ class LuaElementType(@NonNls debugName: String) : IElementType(debugName, LuaLan
 
         //region Loops
         // while exp do block end
-        val WHILE_STATEMENT = LuaElementType("while")
+        val WHILE_STATEMENT = LuaElementType("WHILE_STATEMENT")
         // repeat block until exp
         val REPEAT_STATEMENT = LuaElementType("REPEAT_STATEMENT")
         // for Name `=` exp `,` exp [`,` exp] do block end
@@ -53,13 +48,24 @@ class LuaElementType(@NonNls debugName: String) : IElementType(debugName, LuaLan
         // function funcname funcbody
         val FUNCTION_DEFINITION_STATEMENT = LuaElementType("FUNCTION_DEFINITION_STATEMENT")
         // local function Name funcbody
-        val LOCAL_FUNCTION_DEFINITION_STATEMENT = LuaElementType("FUNCTION_DEFINITION_STATEMENT")
+        val LOCAL_FUNCTION_DEFINITION_STATEMENT = LuaElementType("LOCAL_FUNCTION_DEFINITION_STATEMENT")
         // local namelist [`=` explist]
-        val LOCAL_NAME_DEFINITION_STATEMENT = LuaElementType("LOCAL_ASSIGNMENT_STATEMENT")
+        val LOCAL_ASSIGNMENT_STATEMENT = LuaElementType("ASSIGNMENT_STATEMENT")
+        // varlist `=` explist
+        val ASSIGNMENT_STATEMENT = LuaElementType("ASSIGNMENT_STATEMENT")
 
-        val LOCAL_STATEMENTS = TokenSet.create(LOCAL_FUNCTION_DEFINITION_STATEMENT, LOCAL_NAME_DEFINITION_STATEMENT)
+        /*
+        Sometimes expressions are statements too (for ex. function call is not a statement in our parser,
+        but in lua it's functioncall statement). I decided to make this because user can type uncompleted
+        expression or statement, and we need to handle them correctly. Also, user can type something like this:
+        local x = 12
+        x
+         */
+        val EXPRESSION_STATEMENT = LuaElementType("EXPRESSION_STATEMENT")
+
+        val LOCAL_STATEMENTS = TokenSet.create(LOCAL_FUNCTION_DEFINITION_STATEMENT, LOCAL_ASSIGNMENT_STATEMENT)
         val LAST_STATEMENTS = TokenSet.create(RETURN_STATEMENT, BREAK_STATEMENT)
-        val STATEMENTS = TokenSet.create(ASSIGNMENT_STATEMENT, FUNCTION_CALL_STATEMENT, DO_STATEMENT,
+        val STATEMENTS = TokenSet.create(ASSIGNMENT_STATEMENT, EXPRESSION_STATEMENT, DO_STATEMENT,
             WHILE_STATEMENT, REPEAT_STATEMENT, SIMPLE_FOR_LOOP_STATEMENT, RANGE_FOR_LOOP_STATEMENT,
             CONDITIONAL_STATEMENT,
             FUNCTION_DEFINITION_STATEMENT,
@@ -69,7 +75,8 @@ class LuaElementType(@NonNls debugName: String) : IElementType(debugName, LuaLan
 
         //region Names
         // var ::=  Name | prefixexp `[` exp `]` | prefixexp `.` Name
-        val NAME = LuaElementType("NAME")
+        val NAME_REFERENCE = LuaElementType("NAME")
+        val NAME_DECLARATION = LuaElementType("NAME_DECLARATION")
         val NAME_LIST = LuaElementType("NAME_LIST")
         val NAME_EXPR = LuaElementType("NAME_EXPR")
         val VARIABLE = LuaElementType("VARIABLE")
@@ -139,6 +146,17 @@ class LuaElementType(@NonNls debugName: String) : IElementType(debugName, LuaLan
         val GARBAGE_AT_THE_END_OF_FILE = LuaElementType("GARBAGE_AT_THE_END_OF_FILE")
 
         fun createElement(node: ASTNode): PsiElement = when(node.elementType) {
+            NAME_DECLARATION -> LuaNameDeclaration(node)
+            NAME_REFERENCE -> LuaNameReference(node)
+            LUA_BLOCK -> LuaBlock(node)
+            LUA_CHUNK -> LuaChunk(node)
+            SIMPLE_FOR_LOOP_STATEMENT -> LuaSimpleForLoopStatement(node)
+            FUNCTION_DEFINITION_STATEMENT -> LuaFunctionDefinitionStatement(node)
+            ASSIGNMENT_STATEMENT -> LuaAssignmentStatement(node)
+            LOCAL_FUNCTION_DEFINITION_STATEMENT -> LuaFunctionDefinitionStatement(node)
+            LOCAL_ASSIGNMENT_STATEMENT -> LuaAssignmentStatement(node)
+            PREFIX_EXPRESSION -> LuaPrefixExpression(node)
+
             else -> ASTWrapperPsiElement(node)
         }
     }

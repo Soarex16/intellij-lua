@@ -9,12 +9,13 @@ import com.soarex16.lua.lang.psi.LuaElementType.Companion.CONDITIONAL_STATEMENT_
 import com.soarex16.lua.lang.psi.LuaElementType.Companion.CONDITIONAL_STATEMENT_ELSE_BRANCH
 import com.soarex16.lua.lang.psi.LuaElementType.Companion.CONDITIONAL_STATEMENT_THEN_BRANCH
 import com.soarex16.lua.lang.psi.LuaElementType.Companion.DO_STATEMENT
-import com.soarex16.lua.lang.psi.LuaElementType.Companion.FUNCTION_CALL_STATEMENT
+import com.soarex16.lua.lang.psi.LuaElementType.Companion.EXPRESSION_STATEMENT
 import com.soarex16.lua.lang.psi.LuaElementType.Companion.FUNCTION_DEFINITION_STATEMENT
 import com.soarex16.lua.lang.psi.LuaElementType.Companion.GARBAGE_AT_THE_END_OF_FILE
 import com.soarex16.lua.lang.psi.LuaElementType.Companion.LOCAL_FUNCTION_DEFINITION_STATEMENT
-import com.soarex16.lua.lang.psi.LuaElementType.Companion.LOCAL_NAME_DEFINITION_STATEMENT
+import com.soarex16.lua.lang.psi.LuaElementType.Companion.LOCAL_ASSIGNMENT_STATEMENT
 import com.soarex16.lua.lang.psi.LuaElementType.Companion.LUA_BLOCK
+import com.soarex16.lua.lang.psi.LuaElementType.Companion.LUA_CHUNK
 import com.soarex16.lua.lang.psi.LuaElementType.Companion.NAME_LIST
 import com.soarex16.lua.lang.psi.LuaElementType.Companion.RANGE_FOR_LOOP_STATEMENT
 import com.soarex16.lua.lang.psi.LuaElementType.Companion.REPEAT_STATEMENT
@@ -55,8 +56,10 @@ class LuaStatementParser(private val builder: PsiBuilder): ParserBase(builder) {
 
     // chunk ::= block EOF
     fun parseChunk() {
+        val mark = builder.mark()
         parseBlock()
         parseEofGarbage()
+        mark.done(LUA_CHUNK)
     }
 
     fun parseBlock() {
@@ -66,7 +69,7 @@ class LuaStatementParser(private val builder: PsiBuilder): ParserBase(builder) {
     }
 
     // local_definition ::= local_function_definition_statement | local_name_definition_statement
-    private fun parseLocalDefinition(): Marker? {
+    private fun parseLocalDefinition(): Marker {
         return if (lookAhead(1) == LuaTokenType.FUNCTION)
             parseLocalFunctionDefinition()
         else
@@ -91,14 +94,14 @@ class LuaStatementParser(private val builder: PsiBuilder): ParserBase(builder) {
         val mark = builder.mark()
 
         expectAdvance(LuaTokenType.LOCAL) { "'local'" }
-        parseNameList()
+        parseNameList(isDeclaration = true)
 
         if (builder.tokenType == LuaTokenType.ASSIGN) {
             advance() // =
             parseExpressionList()
         }
 
-        mark.done(LOCAL_NAME_DEFINITION_STATEMENT)
+        mark.done(LOCAL_ASSIGNMENT_STATEMENT)
 
         return mark
     }
@@ -108,7 +111,7 @@ class LuaStatementParser(private val builder: PsiBuilder): ParserBase(builder) {
         val mark = builder.mark()
 
         expectAdvance(LuaTokenType.FUNCTION) { "'function'" }
-        expectAdvance(LuaTokenType.IDENTIFIER) { "function name" }
+        parseName(true)
 
         LuaExpressionParser(builder).parseFunctionBody()
 
@@ -126,7 +129,7 @@ class LuaStatementParser(private val builder: PsiBuilder): ParserBase(builder) {
         expectAdvance(LuaTokenType.FOR) { "'for'" }
 
         val nameListMark = builder.mark()
-        val namesCount = parseNameList(createElement = false)
+        val namesCount = parseNameList(createElement = false, isDeclaration = true)
         val loopType = if (namesCount > 1 || builder.tokenType == LuaTokenType.IN) { // range_for_statement
             nameListMark.done(NAME_LIST)
 
@@ -270,40 +273,28 @@ class LuaStatementParser(private val builder: PsiBuilder): ParserBase(builder) {
     }
 
     // other_statement ::= assignment_statement | function_call_statement
-    // assignment_statement ::= variable_list '=' expression_list
+    // name_definition_statement ::= variable_list '=' expression_list
     // function_call_statement ::= variable_or_expression name_and_arguments+
     private fun parseOtherStatement(): Marker? {
         if (builder.tokenType != LuaTokenType.IDENTIFIER) {
             return null
         }
 
-        val callStatement = parseFunctionCallStatement()
-        if (callStatement != null)
-            return callStatement
-
         val mark = builder.mark()
         val expressionParser = LuaExpressionParser(builder)
 
         expressionParser.parseVariableList() // variable_list
-        expectAdvance(LuaTokenType.ASSIGN) { "'='" } // =
-        parseExpressionList() // expression_list
-
-        mark.done(ASSIGNMENT_STATEMENT)
-        return mark
-    }
-
-    private fun parseFunctionCallStatement(): Marker? {
-        val mark = builder.mark()
-
-        val expressionParser = LuaExpressionParser(builder)
-        val parsedPrefix = expressionParser.parsePrefixExpression(includeFunctionCall = false)
-        return if (parsedPrefix != null && builder.tokenType == LuaTokenType.L_PAREN) {
-            expressionParser.parseCallExpression(parsedPrefix)
-            mark.done(FUNCTION_CALL_STATEMENT)
+        return if (builder.tokenType == LuaTokenType.ASSIGN) { // may be bad decision
+            expectAdvance(LuaTokenType.ASSIGN) { "'='" } // =
+            parseExpressionList() // expression_list
+            mark.done(ASSIGNMENT_STATEMENT)
             mark
         } else {
             mark.rollbackTo()
-            null
+            val expressionStatementMark = builder.mark()
+            parseExpressionList()
+            expressionStatementMark.done(EXPRESSION_STATEMENT)
+            expressionStatementMark
         }
     }
 
@@ -337,13 +328,13 @@ class LuaStatementParser(private val builder: PsiBuilder): ParserBase(builder) {
             return
 
         val mark = builder.mark()
-        builder.error("Expected statement")
+        mark.error("Expected statement")
 
         while (builder.tokenType != null) {
             when (builder.tokenType) {
                 // если встретили какой-то хороший токен - пробуем попарсить
-                LuaTokenType.FUNCTION, LuaTokenType.IDENTIFIER, LuaTokenType.DO, LuaTokenType.WHILE,
-                LuaTokenType.REPEAT, LuaTokenType.IF, LuaTokenType.FOR -> parseStatementList()
+                LuaTokenType.FUNCTION, LuaTokenType.DO, LuaTokenType.WHILE, LuaTokenType.REPEAT,
+                LuaTokenType.IDENTIFIER, LuaTokenType.IF, LuaTokenType.FOR -> parseStatement() ?: advance()
                 else -> advance()
             }
         }

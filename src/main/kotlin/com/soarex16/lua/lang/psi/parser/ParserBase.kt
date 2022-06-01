@@ -2,7 +2,6 @@ package com.soarex16.lua.lang.psi.parser
 
 import com.intellij.lang.PsiBuilder
 import com.intellij.lang.PsiBuilder.Marker
-import com.intellij.psi.TokenType
 import com.intellij.psi.TokenType.BAD_CHARACTER
 import com.intellij.psi.tree.IElementType
 import com.intellij.psi.tree.TokenSet
@@ -52,7 +51,7 @@ open class ParserBase(private val builder: PsiBuilder) {
     protected fun advance(): IElementType? {
         val result = builder.tokenType
         builder.advanceLexer()
-        while (builder.tokenType == TokenType.BAD_CHARACTER) {
+        while (builder.tokenType == BAD_CHARACTER) {
             val badMark = builder.mark()
             builder.advanceLexer()
             badMark.error("Unexpected character")
@@ -99,7 +98,13 @@ open class ParserBase(private val builder: PsiBuilder) {
      * Parser combinator which consumes zero or more entries separated by separator
      * @return true if some input was consumed
      */
-    protected fun separatedBy(allowDanglingSeparator: Boolean = true, separatorName: String, separatorParser: Parselet, productionName: String, parser: Parselet): Boolean {
+    protected fun separatedBy(
+        allowDanglingSeparator: Boolean = true,
+        separatorName: String,
+        separatorParser: Parselet,
+        productionName: String,
+        parser: Parselet
+    ): Boolean {
         var consumed = safePoint(parser)
         if (!consumed) {
             return false
@@ -182,11 +187,12 @@ open class ParserBase(private val builder: PsiBuilder) {
         return null
     }
 
-    fun parseNameList(createElement: Boolean = true): Int {
+    fun parseNameList(createElement: Boolean = true, isDeclaration: Boolean = false): Int {
         val mark = builder.mark()
         var namesCount = 0
         separatedBy(allowDanglingSeparator = false, "','", this::parseComma, "identifier") {
-            val parsed = safePoint(this::parseName)
+            val nameParser: () -> Marker? = { parseName(isDeclaration) }
+            val parsed = safePoint(nameParser)
             if (parsed != null) {
                 namesCount += 1
             }
@@ -202,11 +208,12 @@ open class ParserBase(private val builder: PsiBuilder) {
         return namesCount
     }
 
-    fun parseName(): Marker? {
+    fun parseName(isDeclaration: Boolean = false): Marker? {
         val mark = builder.mark()
         val ident = expectAdvance(LuaTokenType.IDENTIFIER) { "identifier" }
         if (ident) {
-            mark.done(LuaElementType.NAME)
+            val type = if (isDeclaration) LuaElementType.NAME_DECLARATION else LuaElementType.NAME_REFERENCE
+            mark.done(type)
             return mark
         }
 

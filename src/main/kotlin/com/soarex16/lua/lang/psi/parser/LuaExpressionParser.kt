@@ -9,6 +9,7 @@ import com.soarex16.lua.lang.psi.LuaElementType.Companion.BINARY_EXPRESSION
 import com.soarex16.lua.lang.psi.LuaElementType.Companion.BINARY_OPERATOR
 import com.soarex16.lua.lang.psi.LuaElementType.Companion.BOOLEAN_CONSTANT
 import com.soarex16.lua.lang.psi.LuaElementType.Companion.ELLIPSIS
+import com.soarex16.lua.lang.psi.LuaElementType.Companion.EXPRESSION_LIST
 import com.soarex16.lua.lang.psi.LuaElementType.Companion.FUNCTION_ARGUMENTS_LIST
 import com.soarex16.lua.lang.psi.LuaElementType.Companion.FUNCTION_BODY
 import com.soarex16.lua.lang.psi.LuaElementType.Companion.FUNCTION_CALL_EXPRESSION
@@ -202,7 +203,7 @@ class LuaExpressionParser(private val builder: PsiBuilder) : ParserBase(builder)
     // name_list ::= NAME (',' NAME)*
     private fun parseFunctionParametersList(): Marker {
         val mark = builder.mark()
-        parseNameList()
+        parseNameList(isDeclaration = true)
         mark.done(FUNCTION_PARAMETERS_LIST)
 
         return mark
@@ -411,6 +412,7 @@ class LuaExpressionParser(private val builder: PsiBuilder) : ParserBase(builder)
 
     // expression_list ::= expression (',' expression)*
     fun parseExpressionList(canBeEmpty: Boolean = false): Boolean {
+        val mark = builder.mark()
         val consumed = separatedBy(
             allowDanglingSeparator = false,
             "','",
@@ -421,6 +423,12 @@ class LuaExpressionParser(private val builder: PsiBuilder) : ParserBase(builder)
         }
         if (!canBeEmpty && !consumed) {
             builder.error("Expression expected")
+        }
+
+        if (!consumed) {
+            mark.drop()
+        } else {
+            mark.done(EXPRESSION_LIST)
         }
 
         return consumed
