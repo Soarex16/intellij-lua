@@ -361,6 +361,7 @@ class LuaExpressionParser(private val builder: PsiBuilder) : ParserBase(builder)
     private fun parseTableFieldSeparator(): Boolean {
         val mark = builder.mark()
         if (builder.tokenType in LuaTokenType.FIELD_SEPARATORS) {
+            advance()
             mark.done(TABLE_FIELD_SEPARATOR)
             return true
         } else {
