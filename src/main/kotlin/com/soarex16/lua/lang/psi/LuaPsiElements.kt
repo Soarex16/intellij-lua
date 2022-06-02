@@ -3,6 +3,7 @@ package com.soarex16.lua.lang.psi
 import com.intellij.extapi.psi.ASTWrapperPsiElement
 import com.intellij.lang.ASTNode
 import com.intellij.psi.*
+import com.intellij.psi.util.descendants
 import com.intellij.psi.util.descendantsOfType
 import com.soarex16.lua.lang.LuaFileType
 
@@ -52,7 +53,11 @@ class LuaNameReference(node: ASTNode) : LuaPsiElement(node) {
             when (currentScope) {
                 is LuaChunk, is LuaBlock, is LuaFunctionDefinitionStatement, is LuaSimpleForLoopStatement -> {
                     val referenceTarget = currentScope
-                        .descendantsOfType<LuaNameDeclaration>()
+                        .children
+                        .flatMap {
+                            it.descendants { d -> d !is LuaBlock } // не лезем в дочерние скоупы
+                            .filterIsInstance<LuaNameDeclaration>()
+                        }
                         .find { it.name == nameToFind }
 
                     if (referenceTarget != null) {
